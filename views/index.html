@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="//stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+    <link id="bsdp-css" href="//uxsolutions.github.io/bootstrap-datepicker/bootstrap-datepicker/css/bootstrap-datepicker3.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/typeahead.css">
+    <link rel="stylesheet" type="text/css" href="//unpkg.com/dc@3/dc.css">
+    <link href="https://abs.twimg.com/favicons/favicon.ico" rel="shortcut icon" type="image/x-icon"/>
+
+    <style>
+      .datepicker>div {display: block}
+      .list-group-item { cursor: pointer; }
+      .list-group-item:focus {outline: 0;}
+      *[data-mode] {display:none;}
+      #userDropdown img {
+        width: 1.5rem;
+        border-radius: 1rem;
+        margin-right: 0.4rem;
+      }
+      nav {margin-bottom: 2rem;}
+      .navbar-nav-svg {
+        display: inline-block;
+        width: 1rem;
+        height: 1rem;
+        position: relative;
+        top: 0.1rem;
+        margin-right: 0.4rem;
+        vertical-align: text-top;
+      }
+
+      .sign-in-with-twitter {
+        background-color: #1da1f2;
+        border-color: #1da1f2;
+      }
+    </style>
+
+    <title>Engagement API explorer</title>
+  </head>
+  <body class="bg-light">
+    <nav class="navbar sticky-top navbar-dark bg-dark navbar-expand-lg">
+      <a class="navbar-brand" href="#">Engagement API explorer</a>
+      <div class="collapse navbar-collapse" id="navbarText">
+        <ul class="navbar-nav mr-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="//developer.twitter.com/en/products/metrics">About</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="//developer.twitter.com/en/docs/metrics/get-tweet-engagement/overview">Docs</a>
+          </li>
+        </ul>
+        <div class="dropdown" data-emitter-class="AuthDropdown" data-emitter-click="dispatchAction" id="userDropdown">
+          <button class="btn btn-secondary" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <svg class="navbar-nav-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 416.32" focusable="false" role="img" id="twitterLogo"><title>Twitter</title><path d="M160.83 416.32c193.2 0 298.92-160.22 298.92-298.92 0-4.51 0-9-.2-13.52A214 214 0 0 0 512 49.38a212.93 212.93 0 0 1-60.44 16.6 105.7 105.7 0 0 0 46.3-58.19 209 209 0 0 1-66.79 25.37 105.09 105.09 0 0 0-181.73 71.91 116.12 116.12 0 0 0 2.66 24c-87.28-4.3-164.73-46.3-216.56-109.82A105.48 105.48 0 0 0 68 159.6a106.27 106.27 0 0 1-47.53-13.11v1.43a105.28 105.28 0 0 0 84.21 103.06 105.67 105.67 0 0 1-47.33 1.84 105.06 105.06 0 0 0 98.14 72.94A210.72 210.72 0 0 1 25 370.84a202.17 202.17 0 0 1-25-1.43 298.85 298.85 0 0 0 160.83 46.92" fill="currentColor"></path></svg>
+            <span>Sign in with Twitter</span>
+          </button>
+          <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
+            <a class="dropdown-item disabled" href="#" tabindex="-1" aria-disabled="true" id="userName"></a>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item" href="#logout">Log out</a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <main class="container">
+      <div class="row">
+        <div class="col-md-12">
+          <form>
+            <div class="form-row" id="searchBox" data-emitter-class="SearchBox">
+              <div class="col-md-10">
+                <label class="sr-only" for="inlineFormInputGroup">Username</label>
+                <div class="input-group">
+                  <div class="input-group-prepend" id="userQueryLabel" data-mode="owned">
+                    <div class="input-group-text"></div>
+                  </div>
+                  <input data-emitter-keydown="dispatchPerformSearch" data-emitter-keyup="checkQuery" autocapitalize="off" spellcheck="false" type="text" class="form-control typeahead" id="searchQuery" placeholder="Search query" data-provide="typeahead" data-toggle="tooltip" data-placement="bottom" />
+                </div>
+              </div>
+              <div class="col-auto">
+                <button disabled type="submit" class="btn btn-primary" id="searchButton" data-emitter-click="dispatchPerformSearch">Search</button>
+              </div>
+            </div> <!-- #searchBox -->
+            <div class="row">
+              <div class="col-md-10 mb-2" id="modeLabels" data-emitter-class="ModeSwitcher" data-emitter-click="switchMode">
+                <small data-mode="owned">You are requesting all engagement metrics for your current user.<br>Want to request likes, Retweets and replies for all public Tweets? <a href="#">Switch to public mode</a></small>
+                <small data-mode="public">You are requesting likes, Retweets and replies for all public Tweets.<br>Want to request all metrics for your user? <a href="#">Switch to owned mode</a></small>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-10 mb-2">
+                    <div class="input-group input-daterange">
+                      <input type="text" class="form-control" name="fromDate">
+                      <div class="input-group-prepend">
+                        <span class="input-group-text" style="border-left: none" id="">to</span>
+                      </div>
+                      <input type="text" class="form-control" name="toDate">
+                    </div>
+              </div>
+              <div class="col-md-2">
+
+              </div>
+            </div>
+          </form>
+        </div> <!-- col-md-12 -->
+      </div> <!-- row -->
+      <div class="row">
+        <div class="col-md-10 order-md-1">
+          <div class="alert alert-danger" role="alert" id="searchError" style="display: none"></div>
+          <div id="searchResults" class="list-group" style="display: none; max-height: 500px; overflow-y: auto"></div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="alert alert-info" role="alert" id="chartErrorMessage" style="display: none"></div>
+      </div>
+      <div class="row" id="chartArea">
+        <div class="col-md-12">
+<!--           <ul class="nav nav-pills mb-2" id="selector" role="tablist">
+            <li class="nav-item">
+              <a class="nav-link active" id="pills-chart-tab" data-toggle="pill" href="#chart" role="tab" aria-controls="chart" aria-selected="true">Chart</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" id="pills-comparison-tab" data-toggle="pill" href="#comparison" role="tab" aria-controls="comparison" aria-selected="true">Compare</a>
+            </li>
+          </ul>
+ -->          <div class="tab-content">
+            <div id="chart-container" class="tab-pane show active" role="tabpanel" style="width: 100%; height: 500px" data-emitter-class="EngagementChart">
+              <div id="chart"></div>
+              <div id="chart-overview"></div>
+            </div>
+            <div id="comparison" class="tab-pane" role="tabpanel" data-emitter-class="EngagementComparison">
+              <div class="dropdown">
+                <button class="btn btn-light dropdown-toggle" type="button" id="selectEngagementMetric" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                  Select engagement metric
+                </button>
+                <div class="dropdown-menu" aria-labelledby="selectEngagementMetric" id="engagementMetricOptions"></div>
+                <div id="comparisonChart"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <!-- /Container -->
+
+    <!-- Auth Modal -->
+    <div class="modal fade" id="authModal" tabindex="-1" role="dialog" aria-labelledby="authModalLabel" aria-hidden="true" data-backdrop="static">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-auto text-center mb-2">
+                <h5>Engagement API explorer is a fun way to explore metrics for your Tweets or for the public conversation.</h5>
+                <h5>Sign in to get started.</h5>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-12 text-center">
+                <a class="btn btn-primary sign-in-with-twitter" href="/auth">
+                  <svg class="navbar-nav-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 416.32" focusable="false" role="img" id="twitterLogo"><title>Twitter</title><path d="M160.83 416.32c193.2 0 298.92-160.22 298.92-298.92 0-4.51 0-9-.2-13.52A214 214 0 0 0 512 49.38a212.93 212.93 0 0 1-60.44 16.6 105.7 105.7 0 0 0 46.3-58.19 209 209 0 0 1-66.79 25.37 105.09 105.09 0 0 0-181.73 71.91 116.12 116.12 0 0 0 2.66 24c-87.28-4.3-164.73-46.3-216.56-109.82A105.48 105.48 0 0 0 68 159.6a106.27 106.27 0 0 1-47.53-13.11v1.43a105.28 105.28 0 0 0 84.21 103.06 105.67 105.67 0 0 1-47.33 1.84 105.06 105.06 0 0 0 98.14 72.94A210.72 210.72 0 0 1 25 370.84a202.17 202.17 0 0 1-25-1.43 298.85 298.85 0 0 0 160.83 46.92" fill="currentColor"></path></svg>
+                  <span>Sign in with Twitter</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- /Auth Modal -->
+  
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script sync src="//platform.twitter.com/widgets.js"></script>
+    <script src="//code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" crossorigin="anonymous"></script>
+    <script src="//stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script>
+    <script src="//cdn.jsdelivr.net/npm/chrono-node@1.3.5/chrono.min.js"></script>
+    <script src="//uxsolutions.github.io/bootstrap-datepicker/bootstrap-datepicker/js/bootstrap-datepicker.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/crossfilter/1.3.12/crossfilter.min.js" integrity="sha256-T9tvV3x+/vCnCoFciKNZwbaJ46q9lh6iZjD0ZjD95lE=" crossorigin="anonymous"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/d3/5.7.0/d3.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/dc/3.0.9/dc.min.js"></script>
+    <script src="/js/bootstrap3-typeahead.js"></script>
+    <script src="/js/emitter.js"></script>
+    <script src="/js/main.js"></script>
+    <script>Emitter.init('/js/')</script>
+  </body>
+</html>
